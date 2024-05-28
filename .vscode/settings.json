@@ -1,5 +1,14 @@
 {
-    "java.project.referencedLibraries": [
-        "lib/**/*.jar"
-    ]
+    "java.project.referencedLibraries": {
+        "include": [
+            "lib/**/*.jar",
+            "c:\\Users\\aiden\\Dropbox\\PC (2)\\Downloads/**/*.jar"
+        ],
+        "exclude": [
+            "c:\\Users\\aiden\\Dropbox\\PC (2)\\Downloads\\JAR's\\core.jar",
+            "c:\\Users\\aiden\\Dropbox\\PC (2)\\Downloads\\ICSU\\processing-task-6-creatingmethods-LianAustin-1\\lib\\repl_core.jar",
+            "c:\\Users\\aiden\\Dropbox\\PC (2)\\Downloads\\ICSU\\processing-task-6-creatingmethods-LianAustin\\lib\\repl_core.jar",
+            "c:\\Users\\aiden\\Dropbox\\PC (2)\\Downloads\\jna.jar"
+        ]
+    }
 }

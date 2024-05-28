@@ -30,8 +30,8 @@ public class Sketch extends PApplet {
 
   @Override
   public void setup() {
-    opening = loadImage("Gifs and Images/202405271549-ezgif.com-animated-gif-maker.gif");
-    cutscene1 = loadImage("cutscene2.gif");
+    opening = loadImage("Photos, GIFs, Videos, Music/360_F_459326746_Sbe7u3BYDy3rDmMk1MP9IMUkkgTHRNss.png");
+    cutscene1 = loadImage("Photos, GIFs, Videos, Music/night-sky-glows-with-iridescent-deep-space-generative-ai.jpg");
         
     cutsceneStartTime = millis();
   }
