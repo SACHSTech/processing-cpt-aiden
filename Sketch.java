@@ -15,24 +15,24 @@ public class Sketch extends PApplet {
   final int GAME = 3;
     
   int state = OPENING;
-
-  PImage opening;
   PImage cutscene1;
     
   // Exstablish variables for the cutscene time
   int cutsceneStartTime;
-  int cutsceneDuration = 5000; 
+  int openingDuration = 16500; 
+  int cutscene1Duration = 5000; 
+
+  Opening Opening;
+  boolean OpeningDisplayed = false;
 
   @Override
   public void settings() {
-    size(900, 507);
+    size(900, 500);
   }
 
   @Override
   public void setup() {
-    opening = loadImage("Photos, GIFs, Videos, Music/360_F_459326746_Sbe7u3BYDy3rDmMk1MP9IMUkkgTHRNss.png");
     cutscene1 = loadImage("Photos, GIFs, Videos, Music/night-sky-glows-with-iridescent-deep-space-generative-ai.jpg");
-        
     cutsceneStartTime = millis();
   }
 
@@ -41,8 +41,11 @@ public class Sketch extends PApplet {
     switch (state) {
     case OPENING:
       drawOpening();
-      if (millis() - cutsceneStartTime > cutsceneDuration) {
+      if (millis() - cutsceneStartTime > openingDuration) {
         state = MENU;
+        if (Opening != null) {
+          Opening.close();  
+        }
       }
       break;
 
@@ -52,7 +55,7 @@ public class Sketch extends PApplet {
 
     case CUTSCENE1:
       drawCutscene1();
-      if (millis() - cutsceneStartTime > cutsceneDuration) {
+      if (millis() - cutsceneStartTime > cutscene1Duration) {
         state = GAME;
       }
       break;
@@ -65,7 +68,10 @@ public class Sketch extends PApplet {
 
   void drawOpening() {
     background(0);
-    image(opening, 0, 0, width, height);
+    if (!OpeningDisplayed) {
+      Opening = new Opening();
+      OpeningDisplayed = true;
+    }
   }
 
   void drawMenu() {
