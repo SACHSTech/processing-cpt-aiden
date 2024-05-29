@@ -1,5 +1,4 @@
 import processing.core.PApplet;
-import processing.core.PImage;
 
 public class Sketch extends PApplet {
     
@@ -15,15 +14,17 @@ public class Sketch extends PApplet {
   final int GAME = 3;
     
   int state = OPENING;
-  PImage cutscene1;
     
   // Exstablish variables for the cutscene time
   int cutsceneStartTime;
   int openingDuration = 16500; 
-  int cutscene1Duration = 5000; 
+  int cutscene1Duration = 21000; 
 
   Opening Opening;
   boolean OpeningDisplayed = false;
+
+  Cutscene1 Cutscene1;
+  boolean Cutscene1Displayed = false;
 
   @Override
   public void settings() {
@@ -32,7 +33,6 @@ public class Sketch extends PApplet {
 
   @Override
   public void setup() {
-    cutscene1 = loadImage("Photos, GIFs, Videos, Music/night-sky-glows-with-iridescent-deep-space-generative-ai.jpg");
     cutsceneStartTime = millis();
   }
 
@@ -43,7 +43,7 @@ public class Sketch extends PApplet {
       drawOpening();
       if (millis() - cutsceneStartTime > openingDuration) {
         state = MENU;
-        if (Opening != null) {
+        if (Opening!= null) {
           Opening.close();  
         }
       }
@@ -57,6 +57,9 @@ public class Sketch extends PApplet {
       drawCutscene1();
       if (millis() - cutsceneStartTime > cutscene1Duration) {
         state = GAME;
+        if (Cutscene1 != null) {
+          Cutscene1.close();  
+        }
       }
       break;
 
@@ -84,7 +87,10 @@ public class Sketch extends PApplet {
 
   void drawCutscene1() {
     background(0);
-    image(cutscene1, 0, 0, width, height);
+     if (!Cutscene1Displayed) {
+      Cutscene1 = new Cutscene1();
+      Cutscene1Displayed = true;
+    }
   }
 
   void drawGame() {
