@@ -9,7 +9,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 /**
  * A class that's set up to help play music in other classes
  * @author A. Razack
- *
+ * Credit goes to my friend Aaron Chow for helping me write this class
  */
 
 // A class that plays music

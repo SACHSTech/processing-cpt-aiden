@@ -1,4 +1,5 @@
 import processing.core.PApplet;
+import processing.core.PFont;
 import processing.core.PImage;
 
 public class Sketch extends PApplet {
@@ -28,12 +29,21 @@ public class Sketch extends PApplet {
   Cutscene Cutscene;
   boolean CutsceneDisplayed = false;
 
-  // Variables for animated background with image frames
+  // Variables for animated background with image frames and fonts
   PImage[] frames;
-  int numFrames = 5; 
+  int numFrames = 8; 
   int currentFrame = 0;
   int frameDuration = 100; 
   int lastFrameChangeTime = 0;
+
+  PFont titleFont;
+  PFont menuFont;
+
+  boolean showEnterText = true;
+  int lastBlinkTime = 0;
+  int blinkInterval = 500;
+
+  static boolean isFinished = false;
 
   @Override
   public void settings() {
@@ -43,12 +53,16 @@ public class Sketch extends PApplet {
   @Override
   public void setup() {
     cutsceneStartTime = millis();
-
+  
     // Initialize and load image frames
     frames = new PImage[numFrames];
     for (int i = 0; i < numFrames; i++) {
-      frames[i] = loadImage("menuframe" + i + ".png");
+      frames[i] = loadImage("Photos, GIFs, Videos, Music/menuframe" + i + ".png");
     }
+
+    // Load custom fonts
+    titleFont = createFont("Photos, GIFs, Videos, Music/The Centurion .ttf", 64);
+    menuFont = createFont("Photos, GIFs, Videos, Music/CloisterBlack.ttf", 32, true);
   }
 
   @Override
@@ -75,11 +89,8 @@ public class Sketch extends PApplet {
         if (Cutscene!= null) {
           Cutscene.close();  
         }
+        isFinished = true;
       }
-      break;
-
-    case GAME:
-      drawGame();
       break;
     }
   }
@@ -99,10 +110,18 @@ public class Sketch extends PApplet {
       lastFrameChangeTime = millis();
     }
     image(frames[currentFrame], 0, 0, width, height);
-    fill(255);
-    textSize(32);
-    textAlign(CENTER, CENTER);
-    text("Press 'Enter' to Start Next Cutscene", width / 2, height / 2);
+
+    // Draw blinking menu and title text
+    drawTextWithBorder("Heroes of Valoria", width / 2, height / 4, titleFont, 64, color(255), color(0));
+   
+    if (millis() - lastBlinkTime > blinkInterval) {
+      showEnterText = !showEnterText;
+      lastBlinkTime = millis();
+    }
+
+    if (showEnterText) {
+      drawTextWithBorder("Press 'Enter' to Begin", width / 2, height / 2, menuFont, 32, color(255), color(0));
+    }
   }
 
   void drawCutscene() {
@@ -113,12 +132,20 @@ public class Sketch extends PApplet {
     }
   }
 
-  void drawGame() {
-    background(50);
-    fill(255);
-    textSize(32);
+  void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
+    // Draw black borders alongside any text
+    textFont(font);
+    textSize(size);
     textAlign(CENTER, CENTER);
-    text("Game Screen", width / 2, height / 2);
+
+    fill(borderColor);
+    text(text, x - 1, y);
+    text(text, x + 1, y);
+    text(text, x, y - 1);
+    text(text, x, y + 1);
+  
+    fill(fillColor);
+    text(text, x, y);
   }
 
   @Override
