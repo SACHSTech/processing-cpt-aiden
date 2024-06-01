@@ -40,7 +40,7 @@ public class Sketch extends PApplet {
   PFont menuFont;
 
   boolean showEnterText = true;
-  int lastBlinkTime = 0;
+  int lastBlinkTime = 0;  
   int blinkInterval = 500;
 
   static boolean isFinished = false;
