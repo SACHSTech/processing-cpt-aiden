@@ -49,7 +49,12 @@ public class Sketch extends PApplet {
   boolean rightPressed = false;
 
   // Player images for different directions (0: right, 1: left, 2: up, 3: down)
-  PImage[] playerImages;
+  PImage[][] playerImages;
+  PImage[] playerRestImages;
+  int[] playerFrameCounts = {8, 8, 8, 8}; // Number of animation frames (2-9) for each direction
+  int[] currentPlayerFrame = {0, 0, 0, 0}; // Current frame index for each direction
+  int playerFrameDuration = 100; // Duration for each frame of animation
+  int lastPlayerFrameChangeTime = 0; // Last time the player frame was changed
   int playerDirection = 0;
   float playerX = 150;
   float playerY = 150;
@@ -78,11 +83,32 @@ public class Sketch extends PApplet {
     menuFont = createFont("Photos, GIFs, Videos, Music/CloisterBlack.ttf", 32, true);
     
     // Initialize and load player frames
-    playerImages = new PImage[4];
-    playerImages[0] = loadImage("Photos, GIFs, Videos, Music/walkingright1.png");
-    playerImages[1] = loadImage("Photos, GIFs, Videos, Music/walkingleft1.png");
-    playerImages[2] = loadImage("Photos, GIFs, Videos, Music/walkingup1.png");
-    playerImages[3] = loadImage("Photos, GIFs, Videos, Music/walkingdown1.png");
+    playerImages = new PImage[4][];
+    playerRestImages = new PImage[4];
+    
+    for (int i = 0; i < 4; i++) {
+      playerImages[i] = new PImage[playerFrameCounts[i]];
+    }
+
+    // Load walking frames (2-9) for each direction
+    for (int i = 0; i < playerFrameCounts[0]; i++) {
+      playerImages[0][i] = loadImage("Photos, GIFs, Videos, Music/walkingright" + (i + 2) + ".png");
+    }
+    for (int i = 0; i < playerFrameCounts[1]; i++) {
+      playerImages[1][i] = loadImage("Photos, GIFs, Videos, Music/walkingleft" + (i + 2) + ".png");
+    }
+    for (int i = 0; i < playerFrameCounts[2]; i++) {
+      playerImages[2][i] = loadImage("Photos, GIFs, Videos, Music/walkingup" + (i + 2) + ".png");
+    }
+    for (int i = 0; i < playerFrameCounts[3]; i++) {
+      playerImages[3][i] = loadImage("Photos, GIFs, Videos, Music/walkingdown" + (i + 2) + ".png");
+    }
+
+    // Load resting frames (1) for each direction
+    playerRestImages[0] = loadImage("Photos, GIFs, Videos, Music/walkingright1.png");
+    playerRestImages[1] = loadImage("Photos, GIFs, Videos, Music/walkingleft1.png");
+    playerRestImages[2] = loadImage("Photos, GIFs, Videos, Music/walkingup1.png");
+    playerRestImages[3] = loadImage("Photos, GIFs, Videos, Music/walkingdown1.png");
   }
 
   @Override
@@ -157,7 +183,21 @@ public class Sketch extends PApplet {
 
   void drawGame() {
     background(32);
-    image(playerImages[playerDirection], playerX, playerY, playerWidth, playerLength);
+    
+    // Determine the current frame or resting image
+    PImage currentPlayerImage;
+    if (upPressed || downPressed || leftPressed || rightPressed) {
+      if (millis() - lastPlayerFrameChangeTime > playerFrameDuration) {
+        currentPlayerFrame[playerDirection] = (currentPlayerFrame[playerDirection] + 1) % playerFrameCounts[playerDirection];
+        lastPlayerFrameChangeTime = millis();
+      }
+      currentPlayerImage = playerImages[playerDirection][currentPlayerFrame[playerDirection]];
+    } else {
+      currentPlayerFrame[playerDirection] = 0;
+      currentPlayerImage = playerRestImages[playerDirection];
+    }
+
+    image(currentPlayerImage, playerX, playerY, playerWidth, playerLength);
 
     if (upPressed) {
       playerY -= playerSpeed;
