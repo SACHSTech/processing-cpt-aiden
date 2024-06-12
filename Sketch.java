@@ -5,7 +5,7 @@ import processing.core.PImage;
 public class Sketch extends PApplet {
     
 /**
-  * A class that 
+  * A class that runs my game
   * @author A. Razack
   *
   */
@@ -43,7 +43,16 @@ public class Sketch extends PApplet {
   int lastBlinkTime = 0;  
   int blinkInterval = 500;
 
-  static boolean isFinished = false;
+  boolean upPressed = false;
+  boolean downPressed = false;
+  boolean leftPressed = false;
+  boolean rightPressed = false;
+
+  PImage playerRect;
+  float playerX = 150;
+  float playerY = 150;
+  float playerWidth = 100;
+  float playerLength = 100;
 
   @Override
   public void settings() {
@@ -52,6 +61,7 @@ public class Sketch extends PApplet {
 
   @Override
   public void setup() {
+    
     cutsceneStartTime = millis();
   
     // Initialize and load image frames
@@ -63,6 +73,9 @@ public class Sketch extends PApplet {
     // Load custom fonts
     titleFont = createFont("Photos, GIFs, Videos, Music/The Centurion .ttf", 64);
     menuFont = createFont("Photos, GIFs, Videos, Music/CloisterBlack.ttf", 32, true);
+    
+    // Initialize and load player frames
+    playerRect = loadImage("360_F_459326746_Sbe7u3BYDy3rDmMk1MP9IMUkkgTHRNss.png");
   }
 
   @Override
@@ -89,8 +102,11 @@ public class Sketch extends PApplet {
         if (Cutscene!= null) {
           Cutscene.close();  
         }
-        isFinished = true;
       }
+      break;
+
+    case GAME:
+      drawGame();
       break;
     }
   }
@@ -132,6 +148,24 @@ public class Sketch extends PApplet {
     }
   }
 
+  void drawGame() {
+    background(32);
+    image(playerRect, playerX, playerY, playerWidth, playerLength);
+
+    if (upPressed) {
+      playerY--;
+    }
+    if (downPressed) {
+      playerY++;
+    }
+    if (leftPressed) {
+      playerX--;
+    }
+    if (rightPressed) {
+      playerX++;
+    }
+  }
+
   void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
     // Draw black borders alongside any text
     textFont(font);
@@ -149,10 +183,44 @@ public class Sketch extends PApplet {
   }
 
   @Override
+  // start cutscene when enter key is pressed
   public void keyPressed() {
     if (state == MENU && keyCode == ENTER) {
       state = CUTSCENE;
       cutsceneStartTime = millis();
+    }
+
+    if (state == GAME) {
+      // Update player position based on key press
+      if (keyCode == UP) {
+        upPressed = true;
+      }
+      else if (keyCode == DOWN) {
+        downPressed = true;
+      }
+      else if (keyCode == LEFT) {
+        leftPressed = true;
+      }
+      else if (keyCode == RIGHT) {
+        rightPressed = true;
+      }
+    }
+  }
+
+  public void keyReleased() {
+    if (state == GAME) {
+      if (keyCode == UP) {
+        upPressed = false;
+      }
+      else if (keyCode == DOWN) {
+        downPressed = false;
+      }
+      else if (keyCode == LEFT) {
+        leftPressed = false;
+     }
+      else if (keyCode == RIGHT) {
+       rightPressed = false;
+      }
     }
   }
 }
