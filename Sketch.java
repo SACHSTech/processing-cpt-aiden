@@ -48,11 +48,14 @@ public class Sketch extends PApplet {
   boolean leftPressed = false;
   boolean rightPressed = false;
 
-  PImage playerRect;
+  // Player images for different directions (0: right, 1: left, 2: up, 3: down)
+  PImage[] playerImages;
+  int playerDirection = 0;
   float playerX = 150;
   float playerY = 150;
   float playerWidth = 100;
   float playerLength = 100;
+  float playerSpeed = 3;
 
   @Override
   public void settings() {
@@ -75,7 +78,11 @@ public class Sketch extends PApplet {
     menuFont = createFont("Photos, GIFs, Videos, Music/CloisterBlack.ttf", 32, true);
     
     // Initialize and load player frames
-    playerRect = loadImage("360_F_459326746_Sbe7u3BYDy3rDmMk1MP9IMUkkgTHRNss.png");
+    playerImages = new PImage[4];
+    playerImages[0] = loadImage("Photos, GIFs, Videos, Music/walkingright1.png");
+    playerImages[1] = loadImage("Photos, GIFs, Videos, Music/walkingleft1.png");
+    playerImages[2] = loadImage("Photos, GIFs, Videos, Music/walkingup1.png");
+    playerImages[3] = loadImage("Photos, GIFs, Videos, Music/walkingdown1.png");
   }
 
   @Override
@@ -150,19 +157,19 @@ public class Sketch extends PApplet {
 
   void drawGame() {
     background(32);
-    image(playerRect, playerX, playerY, playerWidth, playerLength);
+    image(playerImages[playerDirection], playerX, playerY, playerWidth, playerLength);
 
     if (upPressed) {
-      playerY--;
+      playerY -= playerSpeed;
     }
     if (downPressed) {
-      playerY++;
+      playerY += playerSpeed;
     }
     if (leftPressed) {
-      playerX--;
+      playerX -= playerSpeed;
     }
     if (rightPressed) {
-      playerX++;
+      playerX += playerSpeed;
     }
   }
 
@@ -191,18 +198,19 @@ public class Sketch extends PApplet {
     }
 
     if (state == GAME) {
-      // Update player position based on key press
+      // Update player position and direction based on key press
       if (keyCode == UP) {
         upPressed = true;
-      }
-      else if (keyCode == DOWN) {
+        playerDirection = 2;
+      } else if (keyCode == DOWN) {
         downPressed = true;
-      }
-      else if (keyCode == LEFT) {
+        playerDirection = 3;
+      } else if (keyCode == LEFT) {
         leftPressed = true;
-      }
-      else if (keyCode == RIGHT) {
+        playerDirection = 1;
+      } else if (keyCode == RIGHT) {
         rightPressed = true;
+        playerDirection = 0;
       }
     }
   }
