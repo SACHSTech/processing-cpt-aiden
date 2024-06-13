@@ -204,8 +204,9 @@ public class Sketch extends PApplet {
     
     // Draw rectangles along the top and bottom sides
     for (int x = 0; x < overworldBackground.width; x += 32) {
-      rect(x, 0, 32, 51); // Top side
-      rect(x, overworldBackground.height - 51, 32, 51); // Bottom side
+      if (!(x >= 2200 ))
+        rect(x, 0, 32, 51); // Top side
+        rect(x, overworldBackground.height - 51, 32, 51); // Bottom side
     }
     
     // Draw rectangles along the left and right sides
@@ -213,7 +214,62 @@ public class Sketch extends PApplet {
       rect(0, y, 32, 51); // Left side
       rect(overworldBackground.width - 32, y, 32, 51); // Right side
     }
-    
+
+    // Draw rectangles at (356, 20) to (356, 360) every 20 pixels
+    for (int y = 20; y <= 360; y += 20) {
+      rect(356, y, 32, 51);
+    }
+
+    // Draw rectangles at (700, 320) to (700, 660) every 20 pixels
+    for (int y = 320; y <= 660; y += 20) {
+      rect(700, y, 32, 51);
+    }
+
+    // Draw rectangles at (700, 660) to (0, 660) every 20 pixels
+    for (int x = 700; x >= 0; x -= 20) {
+      rect(x, 660, 32, 51);
+    }
+
+    // Draw rectangles at (0, 840) to (720, 840) every 20 pixels
+    for (int x = 0; x <= 720; x += 20) {
+      rect(x, 840, 32, 51);
+    }
+
+    // Draw rectangles at (720, 840) to (720, 1020) every 20 pixels
+    for (int y = 840; y <= 1020; y += 20) {
+      rect(720, y, 32, 51);
+    }
+
+    // Draw rectangles at (380, 1020) to (380, 1240) every 20 pixels
+    for (int y = 1020; y <= 1240; y += 20) {
+      rect(380, y, 32, 51);
+    }
+
+    // Draw rectangles at (380, 1240) to (1040, 1240) every 20 pixels
+    for (int x = 380; x <= 1040; x += 20) {
+      rect(x, 1240, 32, 51);
+    }
+
+    // Draw rectangles at (1040, 1240) to (1040, 20) every 20 pixels
+    for (int y = 1240; y >= 20; y -= 20) {
+      rect(1040, y, 32, 51);
+    }
+
+    // Draw rectangles at (1680, 620) to (2340, 620) every 20 pixels
+    for (int x = 1680; x <= 2340; x += 20) {
+      rect(x, 620, 32, 51);
+    }
+
+    // Draw rectangles at (1360, 820) to (1360, 1240) every 20 pixels
+    for (int y = 820; y <= 1240; y += 20) {
+      rect(1360, y, 32, 51);
+    }
+
+    // Draw rectangles at (1360, 1240) to (2340, 1240) every 20 pixels
+    for (int x = 1360; x <= 2340; x += 20) {
+      rect(x, 1240, 32, 51);
+    }
+
     // Determine the current frame or resting image
     PImage currentPlayerImage;
     if (upPressed || downPressed || leftPressed || rightPressed) {
