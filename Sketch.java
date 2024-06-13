@@ -58,9 +58,11 @@ public class Sketch extends PApplet {
   int playerDirection = 0;
   float playerX = 150;
   float playerY = 150;
-  float playerWidth = 100;
-  float playerLength = 100;
-  float playerSpeed = 3;
+  float playerWidth = 64;
+  float playerLength = 64;
+  float playerSpeed = 2;
+
+  PImage overworldBackground;
 
   @Override
   public void settings() {
@@ -109,6 +111,8 @@ public class Sketch extends PApplet {
     playerRestImages[1] = loadImage("Photos, GIFs, Videos, Music/walkingleft1.png");
     playerRestImages[2] = loadImage("Photos, GIFs, Videos, Music/walkingup1.png");
     playerRestImages[3] = loadImage("Photos, GIFs, Videos, Music/walkingdown1.png");
+
+    overworldBackground = loadImage("Photos, GIFs, Videos, Music/world.png");
   }
 
   @Override
@@ -182,7 +186,33 @@ public class Sketch extends PApplet {
   }
 
   void drawGame() {
-    background(32);
+    // Clear the screen to a black background
+    background(0);
+
+
+    float offsetX = width / 2 - playerX - playerWidth / 2;
+    float offsetY = height / 2 - playerY - playerLength / 2;
+
+    pushMatrix();
+    translate(offsetX, offsetY);
+
+    image(overworldBackground, 0, 0);
+
+    // Draw rectangles along the sides of the background
+    stroke(255);
+    fill(255, 0, 0);
+    
+    // Draw rectangles along the top and bottom sides
+    for (int x = 0; x < overworldBackground.width; x += 32) {
+      rect(x, 0, 32, 51); // Top side
+      rect(x, overworldBackground.height - 51, 32, 51); // Bottom side
+    }
+    
+    // Draw rectangles along the left and right sides
+    for (int y = 0; y < overworldBackground.height; y += 51) {
+      rect(0, y, 32, 51); // Left side
+      rect(overworldBackground.width - 32, y, 32, 51); // Right side
+    }
     
     // Determine the current frame or resting image
     PImage currentPlayerImage;
@@ -211,6 +241,8 @@ public class Sketch extends PApplet {
     if (rightPressed) {
       playerX += playerSpeed;
     }
+
+    popMatrix();
   }
 
   void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
@@ -234,6 +266,13 @@ public class Sketch extends PApplet {
   public void keyPressed() {
     if (state == MENU && keyCode == ENTER) {
       state = CUTSCENE;
+      cutsceneStartTime = millis();
+    }
+    else if (state == CUTSCENE && keyCode == ENTER) {
+      state = GAME;
+      if (Cutscene != null) {
+        Cutscene.close();
+      }
       cutsceneStartTime = millis();
     }
 
