@@ -51,22 +51,35 @@ public class Sketch extends PApplet {
   // Player images for different directions (0: right, 1: left, 2: up, 3: down)
   PImage[][] playerImages;
   PImage[] playerRestImages;
-  int[] playerFrameCounts = {8, 8, 8, 8}; // Number of animation frames (2-9) for each direction
-  int[] currentPlayerFrame = {0, 0, 0, 0}; // Current frame index for each direction
-  int playerFrameDuration = 100; // Duration for each frame of animation
-  int lastPlayerFrameChangeTime = 0; // Last time the player frame was changed
+  int[] playerFrameCounts = {8, 8, 8, 8}; 
+  int[] currentPlayerFrame = {0, 0, 0, 0};
+  int playerFrameDuration = 100;
+  int lastPlayerFrameChangeTime = 0; 
   int playerDirection = 0;
   float playerX = 150;
   float playerY = 150;
   float playerWidth = 64;
   float playerLength = 64;
   float playerSpeed = 2;
+  // Player images for sword-swinging animations (0: right, 1: left, 2: up, 3: down)
+  PImage[][] swordSwingingImages;
+  int swordSwingingFrameCount = 6; 
+  int[] currentSwordSwingingFrame = {0, 0, 0, 0}; 
+  boolean isSwinging = false;
+  int lastSwingingFrameChangeTime = 0;
+  int swordSwingingFrameDuration = 100; 
+
 
   PImage overworldBackground;
   PImage borderTree;
   PImage river;
-  Plank plank;
 
+  PImage plankImage;
+  boolean plankCollected = false;
+  float plankX = 2240;
+  float plankY = 1330;
+  float plankWidth = 32;
+  float plankHeight = 32;
 
   @Override
   public void settings() {
@@ -116,10 +129,19 @@ public class Sketch extends PApplet {
     playerRestImages[2] = loadImage("Photos, GIFs, Videos, Music/walkingup1.png");
     playerRestImages[3] = loadImage("Photos, GIFs, Videos, Music/walkingdown1.png");
 
+    // Initialize and load sword-swinging frames
+    swordSwingingImages = new PImage[4][swordSwingingFrameCount];
+    for (int i = 0; i < swordSwingingFrameCount; i++) {
+      swordSwingingImages[0][i] = loadImage("Photos, GIFs, Videos, Music/swingright" + (i + 1) + ".png");
+      swordSwingingImages[1][i] = loadImage("Photos, GIFs, Videos, Music/swingleft" + (i + 1) + ".png");
+      swordSwingingImages[2][i] = loadImage("Photos, GIFs, Videos, Music/swingup" + (i + 1) + ".png");
+      swordSwingingImages[3][i] = loadImage("Photos, GIFs, Videos, Music/swingdown" + (i + 1) + ".png");
+    }
+
     overworldBackground = loadImage("Photos, GIFs, Videos, Music/world.png");
     borderTree = loadImage("Photos, GIFs, Videos, Music/bordertree.png");
     river = loadImage("Photos, GIFs, Videos, Music/water.png");
-    plank = new Plank(2240, 1330);
+    plankImage = loadImage("Photos, GIFs, Videos, Music/plank.png");
   }
 
   @Override
@@ -196,8 +218,8 @@ public class Sketch extends PApplet {
     // Clear the screen to a black background
     background(0);
 
-    float offsetX = width / 2 - playerX - playerWidth / 2;
-    float offsetY = height / 2 - playerY - playerLength / 2;
+    float offsetX = width / 2 - playerX - 64 / 2;
+    float offsetY = height / 2 - playerY - 64 / 2;
 
     pushMatrix();
     translate(offsetX, offsetY);
@@ -206,12 +228,22 @@ public class Sketch extends PApplet {
     drawObstacles();
     handlePlayerMovement();
 
-    popMatrix();
+   // Draw plank if not collected
+   if (!plankCollected) {
+    image(plankImage, plankX, plankY, plankWidth, plankHeight);
+  }
 
-    // Draw the plank if it's not collected
-    if (!plank.isCollected()) {
-      plank.display();
+  // Reset sword-swinging state if animation is done
+  if (isSwinging && millis() - lastSwingingFrameChangeTime > swordSwingingFrameDuration) {
+    currentSwordSwingingFrame[playerDirection]++;
+    if (currentSwordSwingingFrame[playerDirection] >= swordSwingingFrameCount) {
+      isSwinging = false;
+      currentSwordSwingingFrame[playerDirection] = 0;
     }
+    lastSwingingFrameChangeTime = millis();
+  }
+
+    popMatrix();
   }
   
   void drawObstacles() {
@@ -285,25 +317,35 @@ public class Sketch extends PApplet {
 
     // Draw sqaures at (1360, 820) to (1360, 1240) every 20 pixels (Skip drawing at (2240, 1330) if plank is collected)
     for (int y = 0; y <= 608; y += 16) {
-      if (!(plank.isCollected() && playerX >= 2240 && playerX <= 2256 && playerY >= 1320 && playerY <= 1336)) {
-          image(river, 1900, y, 16, 16);
+      if (plankCollected && y > 280 && y < 328) {
+        continue; 
       }
+      image(river, 1900, y, 16, 16);
     }
   }
   
   void handlePlayerMovement() {
     // Determine the current frame or resting image
     PImage currentPlayerImage;
-    if (upPressed || downPressed || leftPressed || rightPressed) {
-      if (millis() - lastPlayerFrameChangeTime > playerFrameDuration) {
-        currentPlayerFrame[playerDirection] = (currentPlayerFrame[playerDirection] + 1) % playerFrameCounts[playerDirection];
-        lastPlayerFrameChangeTime = millis();
-      }
-      currentPlayerImage = playerImages[playerDirection][currentPlayerFrame[playerDirection]];
-    } 
-    else {
-      currentPlayerFrame[playerDirection] = 0;
-      currentPlayerImage = playerRestImages[playerDirection];
+    if (isSwinging) {
+        currentPlayerImage = swordSwingingImages[playerDirection][currentSwordSwingingFrame[playerDirection]];
+        // Set dimensions to 192x192 during swinging animation
+        playerWidth = 192;
+        playerLength = 192;
+    } else if (upPressed || downPressed || leftPressed || rightPressed) {
+        if (millis() - lastPlayerFrameChangeTime > playerFrameDuration) {
+            currentPlayerFrame[playerDirection] = (currentPlayerFrame[playerDirection] + 1) % playerFrameCounts[playerDirection];
+            lastPlayerFrameChangeTime = millis();
+        }
+        currentPlayerImage = playerImages[playerDirection][currentPlayerFrame[playerDirection]];
+        // Reset dimensions to default size (64x64)
+        playerWidth = 64;
+        playerLength = 64;
+    } else {
+        currentPlayerFrame[playerDirection] = 0;
+        playerWidth = 64;
+        playerLength = 64;
+        currentPlayerImage = playerRestImages[playerDirection];
     }
 
     // Check collisions with obstacles before updating player position
@@ -373,9 +415,19 @@ public class Sketch extends PApplet {
     (nextPlayerX >= 1320 && nextPlayerX <= 2340 && nextPlayerY >= 1180 && nextPlayerY <= 1250)||
     (nextPlayerX >= 1320 && nextPlayerX <= 1360 && nextPlayerY >= 760 && nextPlayerY <= 1250)||
     (nextPlayerX >= 1000 && nextPlayerX <= 1050 && nextPlayerY >= 0 && nextPlayerY <= 1240)||
-    (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 0 && nextPlayerY <= 600)) {
+    (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 0 && nextPlayerY <= 230)||
+        (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 280 && nextPlayerY <= 600)||
+    // Allow the player to move through the river path if the plank is collected
+    (!plankCollected && nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 230 && nextPlayerY <= 280)) {
     collisionDetected = true;
   }
+
+    // Check for collision with plank
+    if (!plankCollected && nextPlayerX + playerWidth > plankX && nextPlayerX < plankX + plankWidth &&
+      nextPlayerY + playerLength > plankY && nextPlayerY < plankY + plankHeight) {
+    plankCollected = true;
+    // Add any additional logic for when the plank is collected
+  } 
 
   // If no collision detected, update player position
   if (!collisionDetected) {
@@ -384,6 +436,7 @@ public class Sketch extends PApplet {
   }
 
   // Draw the player
+  
   image(currentPlayerImage, playerX, playerY, playerWidth, playerLength);
 }
 
@@ -432,12 +485,11 @@ public class Sketch extends PApplet {
       } else if (keyCode == RIGHT) {
         rightPressed = true;
         playerDirection = 0;
+      } else if (key == 'c' || key == 'C') {
+        isSwinging = true;
+        currentSwordSwingingFrame[playerDirection] = 0;
+        lastSwingingFrameChangeTime = millis();
       }
-    }
-
-    // Check for collecting the plank
-    if (!plank.isCollected() && playerX >= 2240 && playerX <= 2256 && playerY >= 1320 && playerY <= 1336) {
-      plank.collected = true;
     }
   }
 
