@@ -84,7 +84,7 @@ public class Sketch extends PApplet {
 
   PImage monsterImg; // Image for the monster
   ArrayList<PVector> monsters; // List to store monster positions
-  int maxMonsters = 15; // Total number of monsters
+  int maxMonsters = 25; // Total number of monsters
   double monsterSpeed = 1; // Speed of monsters
   float monsterImageSize = 32; // Size of the monster image
   final int CUT_DELAY = 500; // Delay in milliseconds after each cut
@@ -92,9 +92,20 @@ public class Sketch extends PApplet {
   int[] monsterCuts;
   long[] lastMonsterCutTimes;
 
+  int playerLives;
+  PImage Lives;
+
+  // Constants for cooldown
+  int cooldownTime = 2000;
+  long lastHitTime = 0;
+  boolean inCooldown = false;
+
+
   @Override
   public void settings() {
     size(900, 500);
+
+    playerLives = 5;
   }
 
   @Override
@@ -163,6 +174,8 @@ public class Sketch extends PApplet {
       lastMonsterCutTimes[i] = 0;
     }
     spawnMonsters();
+
+    Lives = loadImage("Photos, GIFs, Videos, Music/heart pixel art 254x254.png");
   }
 
   @Override
@@ -264,6 +277,12 @@ public class Sketch extends PApplet {
       lastSwingingFrameChangeTime = millis();
     }
 
+    // Draw player hitbox
+    float hitboxWidth = 40; 
+    float hitboxHeight = 48; 
+    float hitboxX = playerX + 14;
+    float hitboxY = playerY + 16;
+
     // Loop through monsters
     for (int i = 0; i < monsters.size(); i++) {
       PVector monster = monsters.get(i);
@@ -291,6 +310,44 @@ public class Sketch extends PApplet {
 
       // Draw monster image
       image(monsterImg, monster.x, monster.y, monsterImageSize, monsterImageSize);
+      
+      // Check collision between player hitbox and monster
+      float monsterRadius = monsterImageSize / 2;
+      float playerHitboxRadius = hitboxWidth / 2;
+
+      // Calculate distance between player hitbox center and monster center
+      float distance = dist(hitboxX + hitboxWidth / 2, hitboxY + hitboxHeight / 2, monster.x + monsterRadius, monster.y + monsterRadius);
+
+      // Check if player hitbox and monster are touching
+      if (distance < playerHitboxRadius + monsterRadius) {
+        // Check if not in cooldown
+        if (!inCooldown) {
+          // Player hitbox touched the monster, decrement playerLives
+          playerLives--;
+
+          // Set cooldown timer
+          inCooldown = true;
+          lastHitTime = millis();
+        }
+      }
+    }
+
+    for (int i = 0; i < playerLives; i++) {
+      float x = playerX - 280 - i * 30;
+      float y = playerY - 200 ;
+      fill(255);
+      image(Lives, x, y, 20, 20);
+    }
+
+    if (millis() - lastHitTime > cooldownTime) {
+      inCooldown = false;
+    }
+
+    if (playerLives <= 0) {
+      background(255); 
+      textSize(32);
+      fill(0);
+      text("Game Over", playerX, playerY);
     }
     popMatrix();
   }
@@ -450,32 +507,32 @@ public class Sketch extends PApplet {
       }
     }
 
-  // Right side
-  for (int y = 0; y < overworldBackground.height; y += 51) {
-    if (nextPlayerX + playerWidth > overworldBackground.width - 32 && nextPlayerX < overworldBackground.width) {
-      if (nextPlayerY + playerLength > y && nextPlayerY < y + 51) {
-        collisionDetected = true;
+    // Right side
+    for (int y = 0; y < overworldBackground.height; y += 51) {
+      if (nextPlayerX + playerWidth > overworldBackground.width - 32 && nextPlayerX < overworldBackground.width) {
+        if (nextPlayerY + playerLength > y && nextPlayerY < y + 51) {
+          collisionDetected = true;
+        }
       }
     }
-  }
 
-  if ((nextPlayerX >= 316 && nextPlayerX <= 360 && nextPlayerY >= 20 && nextPlayerY <= 360) ||
-    (nextPlayerX >= 660 && nextPlayerX <= 704 && nextPlayerY >= 270 && nextPlayerY <= 660) ||
-    (nextPlayerX >= 0 && nextPlayerX <= 704 && nextPlayerY >= 610 && nextPlayerY <= 660) ||
-    (nextPlayerX >= 0 && nextPlayerX <= 724 && nextPlayerY >= 780 && nextPlayerY <= 850) ||
-    (nextPlayerX >= 680 && nextPlayerX <= 724 && nextPlayerY >= 850 && nextPlayerY <= 1020) ||
-    (nextPlayerX >= 340 && nextPlayerX <= 384 && nextPlayerY >= 980 && nextPlayerY <= 1240) ||
-    (nextPlayerX >= 360 && nextPlayerX <= 1050 && nextPlayerY >= 1180 && nextPlayerY <= 1240)||
-    (nextPlayerX >= 1640 && nextPlayerX <= 2340 && nextPlayerY >= 560 && nextPlayerY <= 630)||
-    (nextPlayerX >= 1320 && nextPlayerX <= 2340 && nextPlayerY >= 1180 && nextPlayerY <= 1250)||
-    (nextPlayerX >= 1320 && nextPlayerX <= 1360 && nextPlayerY >= 760 && nextPlayerY <= 1250)||
-    (nextPlayerX >= 1000 && nextPlayerX <= 1050 && nextPlayerY >= 0 && nextPlayerY <= 1240)||
-    (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 0 && nextPlayerY <= 230)||
-        (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 280 && nextPlayerY <= 600)||
-    // Allow the player to move through the river path if the plank is collected
-    (!plankCollected && nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 230 && nextPlayerY <= 280)) {
-    collisionDetected = true;
-  }
+    if ((nextPlayerX >= 316 && nextPlayerX <= 360 && nextPlayerY >= 20 && nextPlayerY <= 360) ||
+      (nextPlayerX >= 660 && nextPlayerX <= 704 && nextPlayerY >= 270 && nextPlayerY <= 660) ||
+      (nextPlayerX >= 0 && nextPlayerX <= 704 && nextPlayerY >= 610 && nextPlayerY <= 660) ||
+      (nextPlayerX >= 0 && nextPlayerX <= 724 && nextPlayerY >= 780 && nextPlayerY <= 850) ||
+      (nextPlayerX >= 680 && nextPlayerX <= 724 && nextPlayerY >= 850 && nextPlayerY <= 1020) ||
+      (nextPlayerX >= 340 && nextPlayerX <= 384 && nextPlayerY >= 980 && nextPlayerY <= 1240) ||
+      (nextPlayerX >= 360 && nextPlayerX <= 1050 && nextPlayerY >= 1180 && nextPlayerY <= 1240)||
+      (nextPlayerX >= 1640 && nextPlayerX <= 2340 && nextPlayerY >= 560 && nextPlayerY <= 630)||
+      (nextPlayerX >= 1320 && nextPlayerX <= 2340 && nextPlayerY >= 1180 && nextPlayerY <= 1250)||
+      (nextPlayerX >= 1320 && nextPlayerX <= 1360 && nextPlayerY >= 760 && nextPlayerY <= 1250)||
+      (nextPlayerX >= 1000 && nextPlayerX <= 1050 && nextPlayerY >= 0 && nextPlayerY <= 1240)||
+      (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 0 && nextPlayerY <= 230)||
+      (nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 280 && nextPlayerY <= 600)||
+      // Allow the player to move through the river path if the plank is collected
+      (!plankCollected && nextPlayerX >= 1860 && nextPlayerX <= 1876 && nextPlayerY >= 230 && nextPlayerY <= 280)) {
+      collisionDetected = true;
+    }
 
     // Check for collision with plank
     if (!plankCollected && nextPlayerX + playerWidth > plankX && nextPlayerX < plankX + plankWidth &&
@@ -484,16 +541,15 @@ public class Sketch extends PApplet {
     // Add any additional logic for when the plank is collected
     } 
 
-  // If no collision detected, update player position
-  if (!collisionDetected) {
-    playerX = nextPlayerX;
-    playerY = nextPlayerY;
-  }
+    // If no collision detected, update player position
+    if (!collisionDetected) {
+      playerX = nextPlayerX;
+      playerY = nextPlayerY;
+    }
 
-  // Draw the player
-  
-  image(currentPlayerImage, playerX - offsetX, playerY - offsetY - swingOffsetY, playerWidth, playerLength);
-}
+    // Draw the player
+    image(currentPlayerImage, playerX - offsetX, playerY - offsetY - swingOffsetY, playerWidth, playerLength);
+  }
 
   void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
     // Draw black borders alongside any text
@@ -577,7 +633,6 @@ public class Sketch extends PApplet {
                 monsterCuts[i]++;
                 // Record the time when this monster was last cut
                 lastMonsterCutTimes[i] = millis();
-                break; // Stop checking further monsters
             }
         }
 
