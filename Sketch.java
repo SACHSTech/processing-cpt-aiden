@@ -1,6 +1,8 @@
+import java.util.ArrayList;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
+import processing.core.PVector;
 
 public class Sketch extends PApplet {
     
@@ -69,7 +71,6 @@ public class Sketch extends PApplet {
   int lastSwingingFrameChangeTime = 0;
   int swordSwingingFrameDuration = 100; 
 
-
   PImage overworldBackground;
   PImage borderTree;
   PImage river;
@@ -80,6 +81,16 @@ public class Sketch extends PApplet {
   float plankY = 1330;
   float plankWidth = 32;
   float plankHeight = 32;
+
+  PImage monsterImg; // Image for the monster
+  ArrayList<PVector> monsters; // List to store monster positions
+  int maxMonsters = 15; // Total number of monsters
+  double monsterSpeed = 1; // Speed of monsters
+  float monsterImageSize = 32; // Size of the monster image
+  final int CUT_DELAY = 500; // Delay in milliseconds after each cut
+  final int MAX_CUTS = 3; // Maximum number of cuts before monster dies
+  int[] monsterCuts;
+  long[] lastMonsterCutTimes;
 
   @Override
   public void settings() {
@@ -142,6 +153,16 @@ public class Sketch extends PApplet {
     borderTree = loadImage("Photos, GIFs, Videos, Music/bordertree.png");
     river = loadImage("Photos, GIFs, Videos, Music/water.png");
     plankImage = loadImage("Photos, GIFs, Videos, Music/plank.png");
+
+    monsterImg = loadImage("download.png");
+    monsters = new ArrayList<PVector>();
+    monsterCuts = new int[maxMonsters];
+    lastMonsterCutTimes = new long[maxMonsters];
+    for (int i = 0; i < maxMonsters; i++) {
+      monsterCuts[i] = 0;  // Initialize cuts for each monster to zero
+      lastMonsterCutTimes[i] = 0;
+    }
+    spawnMonsters();
   }
 
   @Override
@@ -228,21 +249,49 @@ public class Sketch extends PApplet {
     drawObstacles();
     handlePlayerMovement();
 
-   // Draw plank if not collected
-   if (!plankCollected) {
-    image(plankImage, plankX, plankY, plankWidth, plankHeight);
-  }
-
-  // Reset sword-swinging state if animation is done
-  if (isSwinging && millis() - lastSwingingFrameChangeTime > swordSwingingFrameDuration) {
-    currentSwordSwingingFrame[playerDirection]++;
-    if (currentSwordSwingingFrame[playerDirection] >= swordSwingingFrameCount) {
-      isSwinging = false;
-      currentSwordSwingingFrame[playerDirection] = 0;
+    // Draw plank if not collected
+    if (!plankCollected) {
+      image(plankImage, plankX, plankY, plankWidth, plankHeight);
     }
-    lastSwingingFrameChangeTime = millis();
-  }
 
+    // Reset sword-swinging state if animation is done
+    if (isSwinging && millis() - lastSwingingFrameChangeTime > swordSwingingFrameDuration) {
+      currentSwordSwingingFrame[playerDirection]++;
+      if (currentSwordSwingingFrame[playerDirection] >= swordSwingingFrameCount) {
+        isSwinging = false;
+        currentSwordSwingingFrame[playerDirection] = 0;
+      }
+      lastSwingingFrameChangeTime = millis();
+    }
+
+    // Loop through monsters
+    for (int i = 0; i < monsters.size(); i++) {
+      PVector monster = monsters.get(i);
+
+      // Check if monster is cut 3 times
+      if (monsterCuts[i] >= 3) {
+        monsters.remove(i);
+        monsterCuts[i] = 0; // Reset cuts for this monster
+        lastMonsterCutTimes[i] = 0; // Reset last cut time for this monster
+        continue; // Skip drawing this monster
+      }
+
+      // Calculate movement towards player
+      float deltaX = playerX - monster.x;
+      float deltaY = playerY - monster.y;
+      float angle = atan2(deltaY, deltaX);
+
+      // If monster is cut, stop its movement for half a second
+      if (monsterCuts[i] > 0 && millis() - lastMonsterCutTimes[i] < 500) {
+        // Do not update monster position
+      } else {
+        monster.x += cos(angle) * monsterSpeed;
+        monster.y += sin(angle) * monsterSpeed;
+      }
+
+      // Draw monster image
+      image(monsterImg, monster.x, monster.y, monsterImageSize, monsterImageSize);
+    }
     popMatrix();
   }
   
@@ -347,6 +396,12 @@ public class Sketch extends PApplet {
         playerLength = 64;
         currentPlayerImage = playerRestImages[playerDirection];
     }
+    // Calculate the offset for centering the player during the swing animation
+    float offsetX = (playerWidth - 64) / 2;
+    float offsetY = (playerLength - 64) / 2;
+
+    // Additional vertical offset to make the swinging animation a bit higher
+    float swingOffsetY = isSwinging ? 14 : 0;
 
     // Check collisions with obstacles before updating player position
     float nextPlayerX = playerX;
@@ -425,9 +480,9 @@ public class Sketch extends PApplet {
     // Check for collision with plank
     if (!plankCollected && nextPlayerX + playerWidth > plankX && nextPlayerX < plankX + plankWidth &&
       nextPlayerY + playerLength > plankY && nextPlayerY < plankY + plankHeight) {
-    plankCollected = true;
+      plankCollected = true;
     // Add any additional logic for when the plank is collected
-  } 
+    } 
 
   // If no collision detected, update player position
   if (!collisionDetected) {
@@ -437,7 +492,7 @@ public class Sketch extends PApplet {
 
   // Draw the player
   
-  image(currentPlayerImage, playerX, playerY, playerWidth, playerLength);
+  image(currentPlayerImage, playerX - offsetX, playerY - offsetY - swingOffsetY, playerWidth, playerLength);
 }
 
   void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
@@ -454,6 +509,18 @@ public class Sketch extends PApplet {
   
     fill(fillColor);
     text(text, x, y);
+  }
+
+  void spawnMonsters() {
+    while (monsters.size() < maxMonsters) {
+      float spawnX = random(50, 2320);
+      float spawnY = random(50, 1400);
+      PVector monsterPosition = new PVector(spawnX, spawnY);
+      monsters.add(monsterPosition);
+      
+      // Initialize cuts for each new monster
+      monsterCuts[monsters.size() - 1] = 0;
+    }
   }
 
   @Override
@@ -485,7 +552,35 @@ public class Sketch extends PApplet {
       } else if (keyCode == RIGHT) {
         rightPressed = true;
         playerDirection = 0;
+
       } else if (key == 'c' || key == 'C') {
+        // Determine the direction vector based on playerDirection
+        float dirX = 0, dirY = 0;
+        if (playerDirection == 0) {
+            dirX = 1; // Facing right
+        } else if (playerDirection == 1) {
+            dirX = -1; // Facing left
+        } else if (playerDirection == 2) {
+            dirY = -1; // Facing up
+        } else if (playerDirection == 3) {
+            dirY = 1; // Facing down
+        }
+
+        // Iterate through monsters to check if player is close enough to cut them
+        for (int i = 0; i < monsters.size(); i++) {
+            PVector monster = monsters.get(i);
+            // Check if the monster is within cutting distance and in the right direction
+            if (dist(playerX, playerY, monster.x, monster.y) < 70 &&
+                ((dirX != 0 && (monster.x - playerX) * dirX > 0) || 
+                 (dirY != 0 && (monster.y - playerY) * dirY > 0))) {
+                // Increment monster cuts
+                monsterCuts[i]++;
+                // Record the time when this monster was last cut
+                lastMonsterCutTimes[i] = millis();
+                break; // Stop checking further monsters
+            }
+        }
+
         isSwinging = true;
         currentSwordSwingingFrame[playerDirection] = 0;
         lastSwingingFrameChangeTime = millis();
