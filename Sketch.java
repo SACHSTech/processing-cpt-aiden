@@ -18,6 +18,7 @@ public class Sketch extends PApplet {
   final int CUTSCENE = 2;
   final int GAME = 3;
   final int GAME2 = 4;
+  boolean gaming = false;
     
   int state = OPENING;
     
@@ -74,6 +75,7 @@ public class Sketch extends PApplet {
   int swordSwingingFrameDuration = 100; 
 
   PImage overworldBackground;
+  PImage caveBackground;
   PImage borderTree;
   PImage river;
 
@@ -92,7 +94,7 @@ public class Sketch extends PApplet {
   long monsterFrameDuration = 200;
   ArrayList<PVector> monsters; // List to store monster positions
   int maxMonsters = 25; // Total number of monsters
-  double monsterSpeed = 1; // Speed of monsters
+  double monsterSpeed = 0.5; // Speed of monsters
   float monsterImageSize = 32; // Size of the monster image
   final int CUT_DELAY = 500; // Delay in milliseconds after each cut
   final int MAX_CUTS = 3; // Maximum number of cuts before monster dies
@@ -173,6 +175,7 @@ public class Sketch extends PApplet {
     }
 
     overworldBackground = loadImage("Photos, GIFs, Videos, Music/world.png");
+    caveBackground = loadImage("Photos, GIFs, Videos, Music/underground background.png");
     borderTree = loadImage("Photos, GIFs, Videos, Music/bordertree.png");
     river = loadImage("Photos, GIFs, Videos, Music/water.png");
     plankImage = loadImage("Photos, GIFs, Videos, Music/plank.png");
@@ -223,10 +226,11 @@ public class Sketch extends PApplet {
 
     case GAME:
       drawGame();
+      gaming = true;
       break;
 
     case GAME2:
-      drawGame();
+      drawGame2();
       break;
     }
   }
@@ -281,12 +285,36 @@ public class Sketch extends PApplet {
     image(overworldBackground, 0, 0);
     drawObstacles();
     handlePlayerMovement();
+    handlePlayerCollision();
+    DrawMonsters();
+    handleSwinging();
 
     // Draw plank if not collected
     if (!plankCollected) {
       image(plankImage, plankX, plankY, plankWidth, plankHeight);
     }
 
+    drawLives();
+    popMatrix();
+  }
+
+  void drawLives() {
+    for (int i = 0; i < playerLives; i++) {
+      float x = playerX - 280 - i * 30;
+      float y = playerY - 200 ;
+      fill(255);
+      image(Lives, x, y, 20, 20);
+    }
+
+    if (playerLives <= 0) {
+      background(255); 
+      textSize(32);
+      fill(0);
+      text("Game Over", playerX, playerY);
+    } 
+  }
+
+  void handleSwinging() {
     // Reset sword-swinging state if animation is done
     if (isSwinging && millis() - lastSwingingFrameChangeTime > swordSwingingFrameDuration) {
       currentSwordSwingingFrame[playerDirection]++;
@@ -297,22 +325,28 @@ public class Sketch extends PApplet {
       lastSwingingFrameChangeTime = millis();
     }
 
+    if (millis() - lastHitTime > cooldownTime) {
+      inCooldown = false;
+    }
+  }
+  
+  void DrawMonsters() {
     // Draw player hitbox
     float hitboxWidth = 40; 
     float hitboxHeight = 48; 
     float hitboxX = playerX + 14;
     float hitboxY = playerY + 16;
-
+    
     // Cycle through monster animation frames
     if (millis() - lastMonsterFrameChangeTime > monsterFrameDuration) {
       currentMonsterFrame = (currentMonsterFrame + 1) % monsterFrameCount;
       lastMonsterFrameChangeTime = millis();
     }
-
+    
     // Loop through monsters
     for (int i = 0; i < monsters.size(); i++) {
       PVector monster = monsters.get(i);
-
+    
       // Check if monster is cut 3 times
       if (monsterCuts[i] >= 3) {
         monsters.remove(i);
@@ -320,12 +354,12 @@ public class Sketch extends PApplet {
         lastMonsterCutTimes[i] = 0; // Reset last cut time for this monster
         continue; // Skip drawing this monster
       }
-
+    
       // Calculate movement towards player
       float deltaX = playerX - monster.x;
       float deltaY = playerY - monster.y;
       float angle = atan2(deltaY, deltaX);
-
+    
       // If monster is cut, stop its movement for half a second
       if (monsterCuts[i] > 0 && millis() - lastMonsterCutTimes[i] < 500) {
         // Do not update monster position
@@ -333,61 +367,42 @@ public class Sketch extends PApplet {
         monster.x += cos(angle) * monsterSpeed;
         monster.y += sin(angle) * monsterSpeed;
       }
-
-          if (millis() - lastMonsterFrameChangeTime > monsterFrameDuration) {
-      currentMonsterFrame = (currentMonsterFrame + 1) % monsterFrameCount;
-      lastMonsterFrameChangeTime = millis();
-    }
-
+    
+      if (millis() - lastMonsterFrameChangeTime > monsterFrameDuration) {
+        currentMonsterFrame = (currentMonsterFrame + 1) % monsterFrameCount;
+        lastMonsterFrameChangeTime = millis();
+      }
+    
       // Draw monster images
       image(monsterFrames[currentMonsterFrame], monster.x, monster.y, monsterImageSize, monsterImageSize);
-      
+          
       // Check collision between player hitbox and monster
       float monsterRadius = monsterImageSize / 2;
       float playerHitboxRadius = hitboxWidth / 2;
-
+    
       // Calculate distance between player hitbox center and monster center
       float distance = dist(hitboxX + hitboxWidth / 2, hitboxY + hitboxHeight / 2, monster.x + monsterRadius, monster.y + monsterRadius);
-
+    
       // Check if player hitbox and monster are touching
       if (distance < playerHitboxRadius + monsterRadius) {
         // Check if not in cooldown
         if (!inCooldown) {
           // Player hitbox touched the monster, decrement playerLives
           playerLives--;
-
+    
           // Set cooldown timer
           inCooldown = true;
           lastHitTime = millis();
         }
       }
     }
-
+    
     // Check if cooldown period has passed
     if (cInCooldown && (millis() - lastCTime > cCooldownTime)) {
       cInCooldown = false;
     }
-
-    for (int i = 0; i < playerLives; i++) {
-      float x = playerX - 280 - i * 30;
-      float y = playerY - 200 ;
-      fill(255);
-      image(Lives, x, y, 20, 20);
-    }
-
-    if (millis() - lastHitTime > cooldownTime) {
-      inCooldown = false;
-    }
-
-    if (playerLives <= 0) {
-      background(255); 
-      textSize(32);
-      fill(0);
-      text("Game Over", playerX, playerY);
-    }
-    popMatrix();
   }
-  
+
   void drawObstacles() {
     // Draw rectangles along the top and bottom sides
     for (int x = 0; x < overworldBackground.width; x += 32) {
@@ -496,6 +511,12 @@ public class Sketch extends PApplet {
     // Additional vertical offset to make the swinging animation a bit higher
     float swingOffsetY = isSwinging ? 14 : 0;
 
+    
+    // Draw the player
+    image(currentPlayerImage, playerX - offsetX, playerY - offsetY - swingOffsetY, playerWidth, playerLength);
+  }
+
+  void handlePlayerCollision() {
     // Check collisions with obstacles before updating player position
     float nextPlayerX = playerX;
     float nextPlayerY = playerY;
@@ -583,8 +604,6 @@ public class Sketch extends PApplet {
       playerY = nextPlayerY;
     }
 
-    // Draw the player
-    image(currentPlayerImage, playerX - offsetX, playerY - offsetY - swingOffsetY, playerWidth, playerLength);
   }
 
   void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
@@ -630,7 +649,7 @@ public class Sketch extends PApplet {
       cutsceneStartTime = millis();
     }
 
-    if (state == GAME) {
+    if (gaming) {
       // Update player position and direction based on key press
       if (keyCode == UP) {
         upPressed = true;
@@ -684,7 +703,7 @@ public class Sketch extends PApplet {
   }
 
   public void keyReleased() {
-    if (state == GAME) {
+    if (gaming) {
       if (keyCode == UP) {
         upPressed = false;
       }
@@ -698,5 +717,14 @@ public class Sketch extends PApplet {
        rightPressed = false;
       }
     }
+  }
+
+  void drawGame2() {
+
+    image(caveBackground, 0, 0);
+    playerX = 150;
+    playerY = 150;
+    playerLives = 5;
+    drawLives();
   }
 }
