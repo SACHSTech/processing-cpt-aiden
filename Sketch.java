@@ -17,6 +17,7 @@ public class Sketch extends PApplet {
   final int MENU = 1;
   final int CUTSCENE = 2;
   final int GAME = 3;
+  final int GAME2 = 4;
     
   int state = OPENING;
     
@@ -221,6 +222,10 @@ public class Sketch extends PApplet {
       break;
 
     case GAME:
+      drawGame();
+      break;
+
+    case GAME2:
       drawGame();
       break;
     }
