@@ -119,7 +119,7 @@ public class Sketch extends PApplet {
   public void settings() {
     size(900, 500);
 
-    playerLives = 5;
+    playerLives = 50;
   }
 
   @Override
@@ -231,6 +231,7 @@ public class Sketch extends PApplet {
 
     case GAME2:
       drawGame2();
+      gaming = true;
       break;
     }
   }
@@ -284,7 +285,7 @@ public class Sketch extends PApplet {
 
     image(overworldBackground, 0, 0);
     drawObstacles();
-    handlePlayerMovement();
+    handlePlayerAnimation();
     handlePlayerCollision();
     DrawMonsters();
     handleSwinging();
@@ -481,7 +482,7 @@ public class Sketch extends PApplet {
     }
   }
   
-  void handlePlayerMovement() {
+  void handlePlayerAnimation() {
     // Determine the current frame or resting image
     PImage currentPlayerImage;
     if (isSwinging) {
@@ -604,10 +605,76 @@ public class Sketch extends PApplet {
       playerY = nextPlayerY;
     }
 
+    if ((nextPlayerX >= 2200 && nextPlayerX <= 2300 && nextPlayerY >= 0 && nextPlayerY <= 20)) {
+      state = GAME2;
+    }
+
   }
 
+  void handlePlayerCollision2() {
+    // Check collisions with obstacles before updating player position
+    float nextPlayerX = playerX;
+    float nextPlayerY = playerY;
+
+    if (upPressed) {
+        nextPlayerY -= playerSpeed;
+    }
+    if (downPressed) {
+        nextPlayerY += playerSpeed;
+    }
+    if (leftPressed) {
+        nextPlayerX -= playerSpeed;
+    }
+    if (rightPressed) {
+        nextPlayerX += playerSpeed;
+    }
+
+    // Check for collisions with each obstacle
+    boolean collisionDetected = false;
+
+    // Collision detection with side borders
+    for (int x = 0; x < caveBackground.width; x += 32) {
+      // Top side
+      if (nextPlayerX + playerWidth > x && nextPlayerX < x + 32) {
+        if (nextPlayerY + playerLength > 0 && nextPlayerY < 51) {
+          collisionDetected = true;
+        }
+      }
+      // Bottom side
+      if (nextPlayerX + playerWidth > x && nextPlayerX < x + 32) {
+        if (nextPlayerY + playerLength > caveBackground.height - 51 && nextPlayerY < caveBackground.height) {
+          collisionDetected = true;
+        }
+      }
+    }
+
+    // Left side
+    for (int y = 0; y < caveBackground.height; y += 51) {
+      if (nextPlayerX + playerWidth > 0 && nextPlayerX < 32) {
+        if (nextPlayerY + playerLength > y && nextPlayerY < y + 51) {
+          collisionDetected = true;
+        }
+      }
+    }
+
+    // Right side
+    for (int y = 0; y < caveBackground.height; y += 51) {
+      if (nextPlayerX + playerWidth > caveBackground.width - 32 && nextPlayerX < caveBackground.width) {
+        if (nextPlayerY + playerLength > y && nextPlayerY < y + 51) {
+          collisionDetected = true;
+        }
+      }
+    }
+
+    // If no collision detected, update player position
+    if (!collisionDetected) {
+      playerX = nextPlayerX;
+      playerY = nextPlayerY;
+    }
+  }
+
+  // a method that draws black borders alongside any text
   void drawTextWithBorder(String text, float x, float y, PFont font, int size, int fillColor, int borderColor) {
-    // Draw black borders alongside any text
     textFont(font);
     textSize(size);
     textAlign(CENTER, CENTER);
@@ -720,11 +787,5 @@ public class Sketch extends PApplet {
   }
 
   void drawGame2() {
-
-    image(caveBackground, 0, 0);
-    playerX = 150;
-    playerY = 150;
-    playerLives = 5;
-    drawLives();
   }
 }
