@@ -18,6 +18,7 @@ public class Sketch extends PApplet {
   final int CUTSCENE = 2;
   final int GAME = 3;
   final int GAME2 = 4;
+  final int GG = 5;
   boolean gaming = false;
     
   int state = OPENING;
@@ -72,7 +73,7 @@ public class Sketch extends PApplet {
   int[] currentSwordSwingingFrame = {0, 0, 0, 0}; 
   boolean isSwinging = false;
   int lastSwingingFrameChangeTime = 0;
-  int swordSwingingFrameDuration = 100; 
+  int swordSwingingFrameDuration = 20; 
 
   PImage overworldBackground;
   PImage caveBackground;
@@ -89,6 +90,7 @@ public class Sketch extends PApplet {
 
   int monsterFrameCount = 12;
   PImage[] monsterFrames = new PImage[monsterFrameCount];
+  PImage[] monsterFrames2 = new PImage[monsterFrameCount];
   int currentMonsterFrame = 0;
   long lastMonsterFrameChangeTime;
   long monsterFrameDuration = 200;
@@ -100,6 +102,21 @@ public class Sketch extends PApplet {
   final int MAX_CUTS = 3; // Maximum number of cuts before monster dies
   int[] monsterCuts;
   long[] lastMonsterCutTimes;
+
+  int bigmonsterFrameCount = 36;
+  PImage[] bigmonsterFrames = new PImage[bigmonsterFrameCount];
+  int currentBigMonsterFrame = 0;
+  int BigMonsterx = 2300;
+  int BigMonstery = 700;
+  long bigmonsterFrameDuration = 100;
+  long lastbigMonsterFrameChangeTime;
+  int maxBigMonsters = 1;
+  double bigmonsterspeed = 0.25;
+  float bigmonsterImageSize = 96;
+  final int BIGCUT_DELAY = 500; 
+  int bigmonsterCuts = 0;
+  int lastBigMonsterCutTimes;
+
 
   int playerLives;
   PImage Lives;
@@ -114,6 +131,7 @@ public class Sketch extends PApplet {
   long lastCTime = 0;
   boolean cInCooldown = false;
 
+  boolean game2Initialized = false;
 
   @Override
   public void settings() {
@@ -185,6 +203,14 @@ public class Sketch extends PApplet {
       monsterFrames[i] = loadImage("Photos, GIFs, Videos, Music/slime" + i + ".png");
     }
 
+    for (int i = 0; i < monsterFrameCount; i++) {
+      monsterFrames2[i] = loadImage("Photos, GIFs, Videos, Music/Bat" + i + ".png");
+    }
+
+    for (int i = 0; i < bigmonsterFrameCount; i++) {
+      bigmonsterFrames[i] = loadImage("Photos, GIFs, Videos, Music/BigMonster" + i + ".png");
+    }
+
     monsters = new ArrayList<PVector>();
     monsterCuts = new int[maxMonsters];
     lastMonsterCutTimes = new long[maxMonsters];
@@ -230,10 +256,50 @@ public class Sketch extends PApplet {
       break;
 
     case GAME2:
+      if (!game2Initialized) {
+        resetGame();
+        game2Initialized = true;
+      }
       drawGame2();
       gaming = true;
       break;
+
+    case GG:
+      drawGG();
+      break;
     }
+  }
+
+  void resetGame() {
+    // Reset player variables
+    playerX = 150;
+    playerY = 150;
+    playerLives = 50;
+    
+    // Reset monsters
+    monsters.clear();
+    monsterCuts = new int[maxMonsters];
+    lastMonsterCutTimes = new long[maxMonsters];
+    for (int i = 0; i < maxMonsters; i++) {
+      // Initialize cuts for each monster to zero
+      monsterCuts[i] = 0;  
+      lastMonsterCutTimes[i] = 0;
+    }
+    bigmonsterCuts = 0;
+    lastBigMonsterCutTimes = 0;
+    spawnMonsters();
+
+    // Reset other variables as needed
+    isSwinging = false;
+    currentSwordSwingingFrame = new int[]{0, 0, 0, 0};
+    lastSwingingFrameChangeTime = 0;
+    inCooldown = false;
+    lastHitTime = 0;
+    cInCooldown = false;
+    lastCTime = 0;
+
+    // Wipe the background
+    background(0);
   }
 
   void drawOpening() {
@@ -363,7 +429,6 @@ public class Sketch extends PApplet {
     
       // If monster is cut, stop its movement for half a second
       if (monsterCuts[i] > 0 && millis() - lastMonsterCutTimes[i] < 500) {
-        // Do not update monster position
       } else {
         monster.x += cos(angle) * monsterSpeed;
         monster.y += sin(angle) * monsterSpeed;
@@ -397,10 +462,127 @@ public class Sketch extends PApplet {
         }
       }
     }
+  }
+
+  void DrawMonstersGame2() {
+    // Draw player hitbox
+    float hitboxWidth = 40; 
+    float hitboxHeight = 48; 
+    float hitboxX = playerX + 14;
+    float hitboxY = playerY + 16;
     
-    // Check if cooldown period has passed
-    if (cInCooldown && (millis() - lastCTime > cCooldownTime)) {
-      cInCooldown = false;
+    // Cycle through different set of monster animation frames for GAME2
+    if (millis() - lastMonsterFrameChangeTime > monsterFrameDuration) {
+      currentMonsterFrame = (currentMonsterFrame + 1) % monsterFrameCount;
+      lastMonsterFrameChangeTime = millis();
+    }
+    
+    // Loop through monsters
+    for (int i = 0; i < monsters.size(); i++) {
+      PVector monster = monsters.get(i);
+    
+      // Check if monster is cut 3 times
+      if (monsterCuts[i] >= 3) {
+        monsters.remove(i);
+        monsterCuts[i] = 0; // Reset cuts for this monster
+        lastMonsterCutTimes[i] = 0; // Reset last cut time for this monster
+        continue; // Skip drawing this monster
+      }
+    
+      // Calculate movement towards player
+      float deltaX = playerX - monster.x;
+      float deltaY = playerY - monster.y;
+      float angle = atan2(deltaY, deltaX);
+    
+      // If monster is cut, stop its movement for half a second
+      if (monsterCuts[i] > 0 && millis() - lastMonsterCutTimes[i] < 500) {
+      } else {
+        monster.x += cos(angle) * monsterSpeed;
+        monster.y += sin(angle) * monsterSpeed;
+      }
+    
+      if (millis() - lastMonsterFrameChangeTime > monsterFrameDuration) {
+        currentMonsterFrame = (currentMonsterFrame + 1) % monsterFrameCount;
+        lastMonsterFrameChangeTime = millis();
+      }
+    
+      image(monsterFrames2[currentMonsterFrame], monster.x, monster.y, monsterImageSize, monsterImageSize);
+          
+      // Check collision between player hitbox and monster
+      float monsterRadius = monsterImageSize / 2;
+      float playerHitboxRadius = hitboxWidth / 2;
+    
+      // Calculate distance between player hitbox center and monster center
+      float distance = dist(hitboxX + hitboxWidth / 2, hitboxY + hitboxHeight / 2, monster.x + monsterRadius, monster.y + monsterRadius);
+    
+      // Check if player hitbox and monster are touching
+      if (distance < playerHitboxRadius + monsterRadius) {
+        // Check if not in cooldown
+        if (!inCooldown) {
+          // Player hitbox touched the monster, decrement playerLives
+          playerLives--;
+    
+          // Set cooldown timer
+          inCooldown = true;
+          lastHitTime = millis();
+        }
+      }
+    }
+  }
+
+  void DrawBigMonster() {
+    // Draw player hitbox
+    float hitboxWidth = 40; 
+    float hitboxHeight = 48; 
+    float hitboxX = playerX + 14;
+    float hitboxY = playerY + 16;
+  
+    // Normalize the direction vector
+    float directionX = 0;
+    float directionY = 0;
+    float distance = dist(playerX, playerY, BigMonsterx, BigMonstery);
+  
+    if (distance != 0) {
+      directionX = (playerX - BigMonsterx) / distance;
+      directionY = (playerY - BigMonstery) / distance;
+    }
+
+    // Update monster position
+    BigMonsterx += directionX * bigmonsterspeed;
+    BigMonstery += directionY * bigmonsterspeed;
+
+    // Animate the monster
+    if (millis() - lastbigMonsterFrameChangeTime > bigmonsterFrameDuration) {
+      currentBigMonsterFrame = (currentBigMonsterFrame + 1) % bigmonsterFrameCount;
+      lastbigMonsterFrameChangeTime = millis();
+    }
+
+    // Draw monster images
+    image(bigmonsterFrames[currentBigMonsterFrame], BigMonsterx, BigMonstery, bigmonsterImageSize, bigmonsterImageSize);
+
+    // Check collision between player hitbox and monster
+    float bigmonsterRadius = bigmonsterImageSize / 2;
+    float playerHitboxRadius = hitboxWidth / 2;
+  
+    // Calculate distance between player hitbox center and monster center
+    float centerXPlayer = hitboxX + hitboxWidth / 2;
+    float centerYPlayer = hitboxY + hitboxHeight / 2;
+    float centerXMonster = BigMonsterx + bigmonsterRadius;
+    float centerYMonster = BigMonstery + bigmonsterRadius;
+  
+    distance = dist(centerXPlayer, centerYPlayer, centerXMonster, centerYMonster);
+
+    // Check if player hitbox and monster are touching
+    if (distance < playerHitboxRadius + bigmonsterRadius) {
+      // Check if not in cooldown
+      if (!inCooldown) {
+        // Player hitbox touched the monster, decrement playerLives
+        playerLives -= 2;
+  
+        // Set cooldown timer
+        inCooldown = true;
+        lastHitTime = millis();
+      }
     }
   }
 
@@ -543,7 +725,7 @@ public class Sketch extends PApplet {
       if (!(x >= 2200)) {
         // Top side
         if (nextPlayerX + playerWidth > x && nextPlayerX < x + 32) {
-          if (nextPlayerY + playerLength > 0 && nextPlayerY < 51) {
+          if (nextPlayerY + playerLength > 0 && nextPlayerY < 40) {
             collisionDetected = true;
           }
         }
@@ -636,7 +818,7 @@ public class Sketch extends PApplet {
     for (int x = 0; x < caveBackground.width; x += 32) {
       // Top side
       if (nextPlayerX + playerWidth > x && nextPlayerX < x + 32) {
-        if (nextPlayerY + playerLength > 0 && nextPlayerY < 51) {
+        if (nextPlayerY + playerLength > 0 && nextPlayerY < 40) {
           collisionDetected = true;
         }
       }
@@ -759,12 +941,39 @@ public class Sketch extends PApplet {
             }
           }
 
+          // check if player is close enough to cut the big mosnter
+          for (int i = 0; i < bigmonsterImageSize; i++) {
+            // Check if the monster is within cutting distance and in the right direction
+            if (dist(playerX, playerY, BigMonsterx, BigMonstery) < 100 &&
+              ((dirX != 0 && (BigMonsterx - playerX) * dirX > 0) || 
+              (dirY != 0 && (BigMonstery - playerY) * dirY > 0))) {
+              // Increment monster cuts
+              bigmonsterCuts++;
+              Sketch.println("monster was cut");
+              // Record the time when this monster was last cut
+              lastBigMonsterCutTimes = millis();
+            }
+          }
+
           isSwinging = true;
           currentSwordSwingingFrame[playerDirection] = 0;
           lastSwingingFrameChangeTime = millis();
           cInCooldown = true;
           lastCTime = millis();
         }
+      }
+
+      // Check if cooldown period has passed
+      if (cInCooldown && (millis() - lastCTime > cCooldownTime)) {
+        cInCooldown = false;
+
+      } else if (key == 'r' || key == 'R') {
+        resetGame();
+        state = GAME;
+      }
+
+      if (bigmonsterCuts >= 1000) {
+        state = GG;
       }
     }
   }
@@ -787,5 +996,34 @@ public class Sketch extends PApplet {
   }
 
   void drawGame2() {
+
+    // Clear the screen to a black background
+    background(0);
+
+    float offsetX = width / 2 - playerX - 64 / 2;
+    float offsetY = height / 2 - playerY - 64 / 2;
+
+    pushMatrix();
+    translate(offsetX, offsetY);
+
+    image(caveBackground, 0, 0);
+    handlePlayerAnimation();
+    handlePlayerCollision2();
+    DrawMonstersGame2(); 
+    DrawBigMonster();
+    handleSwinging();
+    drawLives();
+
+    popMatrix();
+  }
+
+  void drawGG() {
+    float offsetX = width / 2 - playerX - 64 / 2;
+    float offsetY = height / 2 - playerY - 64 / 2;
+    translate(offsetX, offsetY);
+    background(255); 
+    textSize(32);
+    fill(0);
+    text("You have beat the game!", playerX, playerY);
   }
 }
