@@ -19,8 +19,7 @@ public class Sketch extends PApplet {
   final int GAME = 3;
   final int GAME2 = 4;
   final int GG = 5;
-  boolean gaming = false;
-    
+  boolean gaming = false;  
   int state = OPENING;
     
   // Exstablish variables for the cutscene time
@@ -88,21 +87,23 @@ public class Sketch extends PApplet {
   float plankWidth = 32;
   float plankHeight = 32;
 
+  // variables for monsters
   int monsterFrameCount = 12;
   PImage[] monsterFrames = new PImage[monsterFrameCount];
   PImage[] monsterFrames2 = new PImage[monsterFrameCount];
   int currentMonsterFrame = 0;
   long lastMonsterFrameChangeTime;
   long monsterFrameDuration = 200;
-  ArrayList<PVector> monsters; // List to store monster positions
-  int maxMonsters = 25; // Total number of monsters
-  double monsterSpeed = 0.5; // Speed of monsters
-  float monsterImageSize = 32; // Size of the monster image
-  final int CUT_DELAY = 500; // Delay in milliseconds after each cut
-  final int MAX_CUTS = 3; // Maximum number of cuts before monster dies
+  ArrayList<PVector> monsters;
+  int maxMonsters = 25;
+  double monsterSpeed = 0.5; 
+  float monsterImageSize = 32; 
+  final int CUT_DELAY = 500;
+  final int MAX_CUTS = 3;
   int[] monsterCuts;
   long[] lastMonsterCutTimes;
 
+  // variable for the big monster
   int bigmonsterFrameCount = 36;
   PImage[] bigmonsterFrames = new PImage[bigmonsterFrameCount];
   int currentBigMonsterFrame = 0;
@@ -117,7 +118,7 @@ public class Sketch extends PApplet {
   int bigmonsterCuts = 0;
   int lastBigMonsterCutTimes;
 
-
+  // player lives variables
   int playerLives;
   PImage Lives;
 
@@ -126,7 +127,7 @@ public class Sketch extends PApplet {
   long lastHitTime = 0;
   boolean inCooldown = false;
 
-  // Cooldown for pressing "C"
+  // variables for cooldown when pressing "C"
   int cCooldownTime = 2000;
   long lastCTime = 0;
   boolean cInCooldown = false;
@@ -134,15 +135,16 @@ public class Sketch extends PApplet {
   boolean game2Initialized = false;
 
   @Override
+  // window and life amount setting
   public void settings() {
     size(900, 500);
 
-    playerLives = 50;
+    playerLives = 5;
   }
 
   @Override
+  // setup of frames, images, fonts, and monster cuts
   public void setup() {
-    
     cutsceneStartTime = millis();
   
     // Initialize and load image frames
@@ -158,7 +160,6 @@ public class Sketch extends PApplet {
     // Initialize and load player frames
     playerImages = new PImage[4][];
     playerRestImages = new PImage[4];
-    
     for (int i = 0; i < 4; i++) {
       playerImages[i] = new PImage[playerFrameCounts[i]];
     }
@@ -192,6 +193,7 @@ public class Sketch extends PApplet {
       swordSwingingImages[3][i] = loadImage("Photos, GIFs, Videos, Music/swingdown" + (i + 1) + ".png");
     }
 
+    // loading backgrounds and images
     overworldBackground = loadImage("Photos, GIFs, Videos, Music/world.png");
     caveBackground = loadImage("Photos, GIFs, Videos, Music/underground background.png");
     borderTree = loadImage("Photos, GIFs, Videos, Music/bordertree.png");
@@ -211,19 +213,22 @@ public class Sketch extends PApplet {
       bigmonsterFrames[i] = loadImage("Photos, GIFs, Videos, Music/BigMonster" + i + ".png");
     }
 
+    // initializing cuts for monsters
     monsters = new ArrayList<PVector>();
     monsterCuts = new int[maxMonsters];
     lastMonsterCutTimes = new long[maxMonsters];
     for (int i = 0; i < maxMonsters; i++) {
-      monsterCuts[i] = 0;  // Initialize cuts for each monster to zero
+      monsterCuts[i] = 0; 
       lastMonsterCutTimes[i] = 0;
     }
     spawnMonsters();
 
+    // loading lives images
     Lives = loadImage("Photos, GIFs, Videos, Music/heart pixel art 254x254.png");
   }
 
   @Override
+  // main method which handles running all the other methods to create the cutscenes and levels
   public void draw() {
     switch (state) {
     case OPENING:
@@ -270,11 +275,12 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that handles how the game resets by wiping everything
   void resetGame() {
     // Reset player variables
     playerX = 150;
     playerY = 150;
-    playerLives = 50;
+    playerLives = 5;
     
     // Reset monsters
     monsters.clear();
@@ -289,7 +295,7 @@ public class Sketch extends PApplet {
     lastBigMonsterCutTimes = 0;
     spawnMonsters();
 
-    // Reset other variables as needed
+    // Reset other variables 
     isSwinging = false;
     currentSwordSwingingFrame = new int[]{0, 0, 0, 0};
     lastSwingingFrameChangeTime = 0;
@@ -302,6 +308,7 @@ public class Sketch extends PApplet {
     background(0);
   }
 
+  // method that draws the opening cutscene
   void drawOpening() {
     background(0);
     if (!OpeningDisplayed) {
@@ -310,6 +317,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws the menu screen
   void drawMenu() {
      // Draw animated background using image frames
      if (millis() - lastFrameChangeTime > frameDuration) {
@@ -331,6 +339,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws the game cutscene
   void drawCutscene() {
     background(0);
      if (!CutsceneDisplayed) {
@@ -339,6 +348,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws level 1
   void drawGame() {
     // Clear the screen to a black background
     background(0);
@@ -365,7 +375,9 @@ public class Sketch extends PApplet {
     popMatrix();
   }
 
+  // method that sets up the player lives and death screen
   void drawLives() {
+    // set up lives
     for (int i = 0; i < playerLives; i++) {
       float x = playerX - 280 - i * 30;
       float y = playerY - 200 ;
@@ -373,6 +385,7 @@ public class Sketch extends PApplet {
       image(Lives, x, y, 20, 20);
     }
 
+    // create the game over screen
     if (playerLives <= 0) {
       background(255); 
       textSize(32);
@@ -381,6 +394,7 @@ public class Sketch extends PApplet {
     } 
   }
 
+  // method that runs the sword swingign animations as well as the cooldown for hitting monsters
   void handleSwinging() {
     // Reset sword-swinging state if animation is done
     if (isSwinging && millis() - lastSwingingFrameChangeTime > swordSwingingFrameDuration) {
@@ -397,6 +411,7 @@ public class Sketch extends PApplet {
     }
   }
   
+  // method that draws the monsters in level 1
   void DrawMonsters() {
     // Draw player hitbox
     float hitboxWidth = 40; 
@@ -417,9 +432,9 @@ public class Sketch extends PApplet {
       // Check if monster is cut 3 times
       if (monsterCuts[i] >= 3) {
         monsters.remove(i);
-        monsterCuts[i] = 0; // Reset cuts for this monster
-        lastMonsterCutTimes[i] = 0; // Reset last cut time for this monster
-        continue; // Skip drawing this monster
+        monsterCuts[i] = 0; 
+        lastMonsterCutTimes[i] = 0; 
+        continue; 
       }
     
       // Calculate movement towards player
@@ -453,7 +468,7 @@ public class Sketch extends PApplet {
       if (distance < playerHitboxRadius + monsterRadius) {
         // Check if not in cooldown
         if (!inCooldown) {
-          // Player hitbox touched the monster, decrement playerLives
+          // Player hitbox touched the monster subtract playerLives
           playerLives--;
     
           // Set cooldown timer
@@ -464,6 +479,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws the monsters in level 2
   void DrawMonstersGame2() {
     // Draw player hitbox
     float hitboxWidth = 40; 
@@ -519,7 +535,7 @@ public class Sketch extends PApplet {
       if (distance < playerHitboxRadius + monsterRadius) {
         // Check if not in cooldown
         if (!inCooldown) {
-          // Player hitbox touched the monster, decrement playerLives
+          // Player hitbox touched the monster subtract playerLives
           playerLives--;
     
           // Set cooldown timer
@@ -530,6 +546,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws the big monster in level 2
   void DrawBigMonster() {
     // Draw player hitbox
     float hitboxWidth = 40; 
@@ -586,6 +603,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws the trees and river in level 1
   void drawObstacles() {
     // Draw rectangles along the top and bottom sides
     for (int x = 0; x < overworldBackground.width; x += 32) {
@@ -664,6 +682,7 @@ public class Sketch extends PApplet {
     }
   }
   
+  // method that draws the player's walking and swinging animations while paying attention to directional imput
   void handlePlayerAnimation() {
     // Determine the current frame or resting image
     PImage currentPlayerImage;
@@ -699,6 +718,7 @@ public class Sketch extends PApplet {
     image(currentPlayerImage, playerX - offsetX, playerY - offsetY - swingOffsetY, playerWidth, playerLength);
   }
 
+  // method that handles the player collision in level 1
   void handlePlayerCollision() {
     // Check collisions with obstacles before updating player position
     float nextPlayerX = playerX;
@@ -793,6 +813,7 @@ public class Sketch extends PApplet {
 
   }
 
+  // method that handles the player collision in level 2
   void handlePlayerCollision2() {
     // Check collisions with obstacles before updating player position
     float nextPlayerX = playerX;
@@ -871,6 +892,7 @@ public class Sketch extends PApplet {
     text(text, x, y);
   }
 
+  // method that spawns in the monsters
   void spawnMonsters() {
     while (monsters.size() < maxMonsters) {
       float spawnX = random(50, 2320);
@@ -884,7 +906,7 @@ public class Sketch extends PApplet {
   }
 
   @Override
-  // start cutscene when enter key is pressed
+  // method that initializes key presses such as the arrow keys and "c" key
   public void keyPressed() {
     if (state == MENU && keyCode == ENTER) {
       state = CUTSCENE;
@@ -978,6 +1000,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that tracks when an arrow key is released for movement and animation
   public void keyReleased() {
     if (gaming) {
       if (keyCode == UP) {
@@ -995,6 +1018,7 @@ public class Sketch extends PApplet {
     }
   }
 
+  // method that draws level 2
   void drawGame2() {
 
     // Clear the screen to a black background
@@ -1017,6 +1041,7 @@ public class Sketch extends PApplet {
     popMatrix();
   }
 
+  // method that draws the end screen
   void drawGG() {
     float offsetX = width / 2 - playerX - 64 / 2;
     float offsetY = height / 2 - playerY - 64 / 2;
